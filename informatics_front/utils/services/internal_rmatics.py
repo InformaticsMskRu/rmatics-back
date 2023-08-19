@@ -63,9 +63,10 @@ class InternalRmatics(BaseService):
         url = f'{self.service_url}/monitor/problem_monitor'
 
         monitor_args = {
-            'user_id': users,
-            'problem_id': problems,
-
+            # 'user_id': users,
+            # 'problem_id': problems,
+            'uid': users,
+            'pid':  problems,
             'context_id': contest_id,
             'context_source': self.default_context_source,
             'show_hidden': True,

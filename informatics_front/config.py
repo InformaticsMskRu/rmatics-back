@@ -63,7 +63,7 @@ class BaseConfig:
     MAIL_FROM = os.getenv('MAIL_FROM', '')
     GMAIL_USERNAME = os.getenv('GMAIL_USERNAME', '')
     GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', '')
-
+    MOODLE_URL = os.getenv('MOODLE_TOKEN_URL', 'http://localhost:8080/login/token.php')
     # ejudge
     JUDGES_PATH = '/home/judges/'
 

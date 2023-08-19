@@ -84,8 +84,12 @@ class ApiClient(requests.Session):
 
         if allow_bad_http_statuses and response.status_code >= 400:
             data_key = 'error'
-
-        json_response = response.json()[data_key]
+        try:
+            json_response = response.json()[data_key]
+        except:
+            print(url)
+            print(response.content)
+            raise
         return json_response, response.status_code
 
     def put_data(self, url, json, default=None,

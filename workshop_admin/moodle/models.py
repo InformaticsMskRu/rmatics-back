@@ -7,7 +7,7 @@ class Role(models.Model):
     shortname = models.CharField(max_length=100)
 
     superuser_roles = (
-        'admin',
+        'manager',
     )
 
     staff_roles = (
@@ -23,6 +23,7 @@ class Role(models.Model):
 class RoleAssignment(models.Model):
     role = models.ForeignKey('Role', models.DO_NOTHING, blank=True, null=True, db_column='roleid')
     user = models.ForeignKey('MoodleUser', models.DO_NOTHING, blank=True, null=True, db_column='userid')
+    contextid = models.IntegerField()   
 
     class Meta:
         managed = False
@@ -70,13 +71,13 @@ class MoodleUser(models.Model):
     @cached_property
     def is_staff(self):
         is_staff = any(map(lambda r: r.shortname in (Role.staff_roles + Role.superuser_roles),
-                           self.roles.all()))
+                           self.roles.filter(roleassignment__contextid=1)))
         return self.is_superuser or is_staff
 
     @cached_property
     def is_superuser(self):
         is_superuser = any(map(lambda r: r.shortname in Role.superuser_roles,
-                               self.roles.all()))
+                               self.roles.filter(roleassignment__contextid=1)))
         return is_superuser
 
     def has_perm(self, *__, **___):

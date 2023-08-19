@@ -1,5 +1,7 @@
 from typing import Optional
 
+import requests
+
 from flask import current_app, g, request
 from flask.views import MethodView
 from gmail import Message
@@ -43,11 +45,23 @@ class LoginApi(MethodView):
         if user is None:
             raise exc.NotFound('Пользовалель не найден')
 
-        is_password_valid = User.check_password(user.password_md5, password)
-        if not is_password_valid:
-            current_app.logger.warning(f'user_email={args["username"]} '
+        r = requests.get(current_app.config.get('MOODLE_URL'), params={
+             'username': username,
+             'password': password,
+             'service': 'moodle_mobile_app',
+        })
+
+        current_app.logger.warning(f'moodle resp={r.json()}')
+        if "token" not in r.json():
+            current_app.logger.warning(f'user_email={args["username"]} {r.json()} '
                                        f'has failed to log in')
             raise exc.Forbidden('Неправильный пароль')
+ 
+        # is_password_valid = User.check_password(user.password_md5, password)
+        # if not is_password_valid:
+        #     current_app.logger.warning(f'user_email={args["username"]} '
+        #                                f'has failed to log in')
+        #     raise exc.Forbidden('Неправильный пароль')
 
         current_app.logger.debug(f'user_email={args["username"]} has logged in')
 
@@ -182,8 +196,8 @@ class PasswordChangeApi(MethodView):
             filter_by(id=g.payload.get('user_id')). \
             one_or_none()
 
-        if user:
-            user.password_md5 = User.hash_password(args.get('password'))
-            db.session.commit()
+        # if user:
+        #     user.password_md5 = User.hash_password(args.get('password'))
+        #     db.session.commit()
 
         return jsonify({})

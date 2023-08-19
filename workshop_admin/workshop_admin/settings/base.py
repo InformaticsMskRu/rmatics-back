@@ -131,4 +131,6 @@ DATABASE_ROUTERS = (
 AJAX_SELECT_JSON_ENCODER = 'django.core.serializers.json.DjangoJSONEncoder'
 MAIN_APP_URL = os.getenv('MAIN_APP_URL', 'http://localhost:80')
 
+MOODLE_URL = os.getenv('MOODLE_TOKEN_URL', 'http://localhost:8080/login/token.php')
+
 GRAPPELLI_ADMIN_TITLE = 'Informatics: Админка'

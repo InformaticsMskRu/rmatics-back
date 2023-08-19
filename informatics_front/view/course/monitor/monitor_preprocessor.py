@@ -134,7 +134,8 @@ class IOIResultMaker(BaseResultMaker):
         for run in runs:
             status_code = run['ejudge_status']
             if is_right_status(status_code):
-                run['ejudge_score'] = cls.MAX_POINTS
+                pass
+                # run['ejudge_score'] = cls.MAX_POINTS
             elif is_partial(status_code):
                 # If PT we have the same score
                 pass

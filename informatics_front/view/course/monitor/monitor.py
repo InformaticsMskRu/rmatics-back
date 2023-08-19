@@ -26,7 +26,7 @@ from informatics_front.view.course.monitor.monitor_preprocessor import BaseResul
 from informatics_front.view.course.monitor.serializers.monitor import monitor_schema
 
 MonitorData = namedtuple('MonitorData', 'contests users results type')
-
+ContestProblemData = namedtuple('ContestProblemData', 'id name rank')
 
 class WorkshopMonitorApi(MethodView):
     get_args = {
@@ -102,7 +102,7 @@ class WorkshopMonitorApi(MethodView):
         """ Returns list of ids of problems in this contests """
         problem_ids = []
         for contest in contests:
-            ids = [p.id for p in contest.statement.problems]
+            ids = [p.id for p in sorted(contest.problems, key=lambda p: p.rank)]
             problem_ids += ids
 
         return problem_ids
@@ -128,13 +128,14 @@ class WorkshopMonitorApi(MethodView):
                               for sp in statement_problems
                               if sp.problem is not None]
 
-        for sp in statement_problems:
-            sp.problem.rank = sp.rank
+        # for sp in statement_problems:
+        #    # sp.problem.rank = sp.rank
+        #    # sp.problem.name = str(sp.rank) + sp.problem.name
 
         statement_id_statement_problems = defaultdict(list)
 
         for sp in statement_problems:
-            statement_id_statement_problems[sp.statement_id].append(sp.problem)
+            statement_id_statement_problems[sp.statement_id].append(ContestProblemData(sp.problem.id, sp.problem.name, sp.rank))
 
         for contest in contests:
             statement_id = contest.statement_id
