@@ -113,4 +113,4 @@ class RunCommentsApi(MethodView):
         comment_schema = CommentSchema(many=True)
         response = comment_schema.dump(comments)
 
-        return jsonify(response.data)
+        return jsonify(response)

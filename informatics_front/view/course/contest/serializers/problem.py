@@ -1,4 +1,4 @@
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, missing
 
 from informatics_front.model.problem import Problem
 
@@ -14,9 +14,17 @@ class ProblemSchema(Schema):
     sample_tests_json = fields.Method(serialize='serialize_sample_tests')
     output_only = fields.Boolean(dump_only=True)
 
+    # marshmallow 2 dropped a Method field whose function raised AttributeError;
+    # 3+ lets it propagate. Keep the old behaviour: the field is just left out.
     def serialize_sample_tests(self, obj: Problem):
-        obj.ejudge_problem.generate_samples_json()
-        return obj.ejudge_problem.sample_tests_json
+        try:
+            obj.ejudge_problem.generate_samples_json()
+            return obj.ejudge_problem.sample_tests_json
+        except AttributeError:
+            return missing
 
     def fix_content(self, obj: Problem):
-        return obj.content.replace("\\(", "$").replace("\\)", "$")
+        try:
+            return obj.content.replace("\\(", "$").replace("\\)", "$")
+        except AttributeError:
+            return missing

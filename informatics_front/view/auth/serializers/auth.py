@@ -4,8 +4,8 @@ from marshmallow import Schema, fields, post_dump
 class RoleAuthSerializer(Schema):
     shortname = fields.String(dump_only=True)
 
-    @post_dump(pass_many=False)
-    def flat_roles(self, data):
+    @post_dump
+    def flat_roles(self, data, **kwargs):
         return data['shortname']
 
 

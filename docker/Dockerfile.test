@@ -1,13 +1,14 @@
-FROM python:3.7.2-alpine3.9
+FROM python:3.13-slim
 
-ENV FLASK_APP=informatics_front.wsgi.py:application
-
-RUN apk update
-RUN apk add gcc libressl-dev musl-dev libffi-dev
-
-COPY . /app
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    FLASK_APP=informatics_front.wsgi:application
 
 WORKDIR /app
 
-RUN pip install -r requirements.txt
-CMD sleep 30 && flask test
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+COPY . .
+
+CMD ["pytest", "informatics_front/tests", "-v"]

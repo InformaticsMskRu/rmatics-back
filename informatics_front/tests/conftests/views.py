@@ -75,7 +75,7 @@ def authorized_user(app, user_with_token) -> LocalProxy:
     roles_serializer = RoleAuthSerializer(many=True)
     roles = roles_serializer.dumps(user_with_token['user'].roles)
 
-    g.user = RequestUser(id=user_with_token['user'].id, roles=roles.data)
+    g.user = RequestUser(id=user_with_token['user'].id, roles=roles)
 
     yield g
 

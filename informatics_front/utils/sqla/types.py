@@ -47,6 +47,7 @@ class IntEnum(types.TypeDecorator):
         self.enum = enum_class
 
     impl = types.Integer
+    cache_ok = True
 
     def process_bind_param(self, value: typing.Union[typing.Type[enum.Enum], str], dialect: Dialect):
         if isinstance(value, str):

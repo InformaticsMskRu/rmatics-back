@@ -1,12 +1,11 @@
-from flask import request
 from flask.views import MethodView
 from marshmallow import fields
-from webargs.flaskparser import parser
 from werkzeug.exceptions import NotFound
 
 from informatics_front.model import db
 from informatics_front.model.workshop.workshop import WorkShop, WorkshopStatus
 from informatics_front.model.workshop.workshop_connection import WorkshopConnection
+from informatics_front.utils.args import parse_args
 from informatics_front.utils.auth.middleware import login_required
 from informatics_front.utils.auth.request_user import current_user
 from informatics_front.utils.response import jsonify
@@ -21,7 +20,7 @@ class JoinWorkshopApi(MethodView):
 
     @login_required
     def post(self, workshop_id: int):
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
 
         workshop = db.session.query(WorkShop) \
             .filter_by(id=workshop_id,
@@ -40,4 +39,4 @@ class JoinWorkshopApi(MethodView):
         if is_created is True:
             db.session.commit()
         
-        return jsonify(response.data)
+        return jsonify(response)

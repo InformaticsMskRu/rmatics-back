@@ -126,7 +126,8 @@ import itertools
 import re
 import sys
 import warnings
-from collections import UserList, MutableMapping, OrderedDict as _default_dict
+from collections import UserList, OrderedDict as _default_dict
+from collections.abc import MutableMapping
 
 __all__ = ["NoSectionError", "DuplicateOptionError", "DuplicateSectionError",
            "NoOptionError", "InterpolationError", "InterpolationDepthError",

@@ -1,0 +1,7 @@
+# Dev/test dependencies on top of requirements.txt.
+-r requirements.txt
+pytest
+pytest-flask
+pytest-mock
+mock
+teamcity-messages

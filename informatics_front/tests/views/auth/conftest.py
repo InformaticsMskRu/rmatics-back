@@ -32,3 +32,11 @@ def expired_token(app: Flask, users: dict):
     yield token
 
     app.config['JWT_TOKEN_EXP'] = previous_config_data
+
+
+@pytest.fixture(autouse=True)
+def moodle_accepts_login(mocker):
+    """The login view asks Moodle's token service; the tests must not need a live Moodle."""
+    response = mocker.Mock()
+    response.json.return_value = {'token': 'moodle-token'}
+    return mocker.patch('informatics_front.view.auth.authorization.requests.post', return_value=response)

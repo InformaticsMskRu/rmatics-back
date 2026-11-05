@@ -4,10 +4,8 @@ import requests
 
 from flask import current_app, g, request
 from flask.views import MethodView
-from gmail import Message
 from marshmallow import fields
 from sqlalchemy.orm import joinedload
-from webargs.flaskparser import parser
 from werkzeug import exceptions as exc
 from werkzeug.exceptions import BadRequest
 
@@ -16,6 +14,8 @@ from informatics_front.model import db
 from informatics_front.model.refresh_tokens import RefreshToken
 from informatics_front.model.user.user import User
 from informatics_front.plugins import gmail
+from informatics_front.utils.args import parse_args
+from informatics_front.utils.services.mailer import Message
 from informatics_front.plugins import tokenizer
 from informatics_front.utils.auth.middleware import login_required
 from informatics_front.utils.auth.make_jwt import decode_jwt_token, generate_refresh_token
@@ -32,7 +32,7 @@ class LoginApi(MethodView):
 
     def post(self):
 
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
 
         username, password = args['username'], args['password']
 
@@ -45,13 +45,12 @@ class LoginApi(MethodView):
         if user is None:
             raise exc.NotFound('Пользовалель не найден')
 
-        r = requests.get(current_app.config.get('MOODLE_URL'), params={
-             'username': username,
-             'password': password,
-             'service': 'moodle_mobile_app',
-        })
+        r = requests.post(current_app.config.get('MOODLE_URL'), data={
+            'username': username,
+            'password': password,
+            'service': 'moodle_mobile_app',
+        }, timeout=10)
 
-        current_app.logger.warning(f'moodle resp={r.json()}')
         if "token" not in r.json():
             current_app.logger.warning(f'user_email={args["username"]} {r.json()} '
                                        f'has failed to log in')
@@ -76,7 +75,7 @@ class LoginApi(MethodView):
         if is_created:
             db.session.commit()
 
-        return jsonify(user_data.data)
+        return jsonify(user_data)
 
 
 class LogoutApi(MethodView):
@@ -86,7 +85,7 @@ class LogoutApi(MethodView):
 
     @login_required
     def post(self):
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
 
         db.session.query(RefreshToken).filter_by(user_id=current_user.id,
                                                  token=args.get('refresh_token')).delete()
@@ -119,7 +118,7 @@ class RefreshTokenApi(MethodView):
         return refresh_token.user
 
     def post(self):
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
         token = args.get('refresh_token')
 
         user = self._validate_token(token)
@@ -135,19 +134,19 @@ class RefreshTokenApi(MethodView):
                                  f'user_email={user.email} token has '
                                  f'been refreshed')
 
-        return jsonify(user_data.data)
+        return jsonify(user_data)
 
 
 class PasswordResetApi(MethodView):
     """API handler for invoking password reset action for User.email or User.user_name
     """
     post_args = {
-        'email': fields.String(missing=None),
-        'username': fields.String(missing=None),
+        'email': fields.String(load_default=None),
+        'username': fields.String(load_default=None),
     }
 
     def post(self):
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
 
         # prevent equal-None filter query
         email, username = args.get('email'), args.get('username')
@@ -176,7 +175,7 @@ class PasswordResetApi(MethodView):
         try:
             gmail.send(msg)
         except Exception as e:  # TODO: handle smtplib errors
-            current_app.logger.exception('Unable to send reset password message to', user.email)
+            current_app.logger.exception('Unable to send reset password message to %s', user.email)
 
         return jsonify({})
 
@@ -191,7 +190,7 @@ class PasswordChangeApi(MethodView):
     }
 
     def post(self):
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
         user = db.session.query(User). \
             filter_by(id=g.payload.get('user_id')). \
             one_or_none()

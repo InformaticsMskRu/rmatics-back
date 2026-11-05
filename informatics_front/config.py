@@ -2,7 +2,7 @@ import os
 
 # avialable cofig modules
 DEV_CONFIG_MODULE = 'informatics_front.config.DevConfig'
-TEST_CONFIG_MODULE = 'informatics_front.TestConfig'
+TEST_CONFIG_MODULE = 'informatics_front.config.TestConfig'
 PROD_CONFIG_MODULE = 'informatics_front.config.ProdConfig'
 
 # env-config mapping
@@ -33,7 +33,7 @@ class BaseConfig:
 
     # instance
     SERVER_NAME = os.getenv('SERVER_NAME', None)
-    PREFERRED_URL_SCHEME = os.getenv('URL_SCHEME ', None)
+    PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'http')
     APP_URL = os.getenv('APP_URL', 'http://localhost')
 
     # secrets
@@ -48,12 +48,12 @@ class BaseConfig:
     JWT_REFRESH_TOKEN_EXP = int(JWT_REFRESH_TOKEN_EXP_ENV) if JWT_REFRESH_TOKEN_EXP_ENV else 10 * 24 * 60 * 60
    
     # databases
-    MONGO_URI = os.getenv('MONGO_URI', 'mongodb://user:12345@localhost/test')
     URL_ENCODER_ALPHABET = os.getenv('URL_ENCODER_ALPHABET', 'abcdefghijkl')
 
     SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI',
                                              'mysql+pymysql://user:12345@localhost/pynformatics')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True, 'pool_recycle': 1800}
     SQLALCHEMY_ECHO = bool_(os.environ.get('SQLALCHEMY_ECHO', False))
 
     # services
@@ -63,6 +63,8 @@ class BaseConfig:
     MAIL_FROM = os.getenv('MAIL_FROM', '')
     GMAIL_USERNAME = os.getenv('GMAIL_USERNAME', '')
     GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD', '')
+    SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+    SMTP_PORT = int(os.getenv('SMTP_PORT', 465))
     MOODLE_URL = os.getenv('MOODLE_TOKEN_URL', 'http://localhost:8080/login/token.php')
     # ejudge
     JUDGES_PATH = '/home/judges/'

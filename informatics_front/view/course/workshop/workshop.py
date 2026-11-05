@@ -1,5 +1,4 @@
 from flask.views import MethodView
-from marshmallow import MarshalResult
 from sqlalchemy.orm import joinedload
 from werkzeug.exceptions import NotFound
 
@@ -37,6 +36,6 @@ class WorkshopApi(MethodView):
         workshop_serializer: WorkshopSchema = WorkshopSchema(exclude=[
             'contests.statement.problems',
         ])
-        response: MarshalResult = workshop_serializer.dump(workshop_connection.workshop)
+        response = workshop_serializer.dump(workshop_connection.workshop)
 
-        return jsonify(response.data)
+        return jsonify(response)
