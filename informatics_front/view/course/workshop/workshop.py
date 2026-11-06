@@ -1,5 +1,5 @@
 from flask.views import MethodView
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager
 from werkzeug.exceptions import NotFound
 
 from informatics_front.model import db
@@ -17,6 +17,7 @@ class WorkshopApi(MethodView):
     def get(self, workshop_id):
         # Get first as only one WorkshopConnection may exist due to unique constraints
         workshop_connection: WorkshopConnection = db.session.query(WorkshopConnection) \
+            .join(WorkshopConnection.workshop) \
             .filter(WorkshopConnection.workshop_id == workshop_id,
                     WorkshopConnection.user_id == current_user.id,
                     # Allow view workshops only for user with ACCEPTED (students)
@@ -25,7 +26,7 @@ class WorkshopApi(MethodView):
                                                    WorkshopConnectionStatus.PROMOTED)),
                     # Workshop should be active and visible
                     WorkShop.status == WorkshopStatus.ONGOING) \
-            .options(joinedload(WorkshopConnection.workshop)
+            .options(contains_eager(WorkshopConnection.workshop)
                      .joinedload(WorkShop.contests)
                      .joinedload(Contest.statement)) \
             .one_or_none()

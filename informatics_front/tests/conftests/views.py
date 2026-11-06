@@ -178,6 +178,21 @@ def draft_workshop_connection(authorized_user, draft_workshop):
 
 
 @pytest.yield_fixture
+def accepted_draft_workshop_connection(authorized_user, draft_workshop):
+    """The user is accepted into a workshop that is not ongoing (draft)."""
+    wc = WorkshopConnection(workshop_id=draft_workshop['workshop'].id,
+                            user_id=g.user['id'],
+                            status=WorkshopConnectionStatus.ACCEPTED)
+    db.session.add(wc)
+    db.session.commit()
+
+    yield wc
+
+    db.session.delete(wc)
+    db.session.commit()
+
+
+@pytest.yield_fixture
 def contest_connection(authorized_user, ongoing_workshop):
     user_id = g.user['id']
     contest = ongoing_workshop['contest']

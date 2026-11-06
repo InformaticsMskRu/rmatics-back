@@ -131,6 +131,18 @@ def test_read_draft_workshop(client, draft_workshop_connection):
 
 @pytest.mark.workshop
 @pytest.mark.usefixtures('authorized_user')
+def test_read_accepted_draft_workshop_while_another_is_ongoing(client, accepted_draft_workshop_connection,
+                                                              ongoing_workshop):
+    # Being accepted is not enough: the workshop itself has to be ongoing, and another
+    # workshop being ongoing must not stand in for it.
+    url = url_for('workshop.read', workshop_id=accepted_draft_workshop_connection.workshop_id)
+
+    resp = client.get(url)
+    assert resp.status_code == 404
+
+
+@pytest.mark.workshop
+@pytest.mark.usefixtures('authorized_user')
 def test_workshop_has_contests(client, workshop_connection_builder):
     workshop_connection = workshop_connection_builder(WorkshopConnectionStatus.ACCEPTED)
     workshop = workshop_connection.workshop
