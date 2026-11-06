@@ -30,7 +30,8 @@ class Statement(db.Model):
     settings = db.Column(JsonType)
 
     problems = db.relationship('Problem',
-                               secondary='moodle.mdl_statements_problems_correlation')
+                               secondary='moodle.mdl_statements_problems_correlation',
+                               overlaps='statement_problems,statement,problem,StatementProblems')
 
 
 class StatementProblem(db.Model):

@@ -75,7 +75,7 @@ def authorized_user(app, user_with_token) -> LocalProxy:
     roles_serializer = RoleAuthSerializer(many=True)
     roles = roles_serializer.dumps(user_with_token['user'].roles)
 
-    g.user = RequestUser(id=user_with_token['user'].id, roles=roles.data)
+    g.user = RequestUser(id=user_with_token['user'].id, roles=roles)
 
     yield g
 
@@ -175,6 +175,21 @@ def draft_workshop_connection(authorized_user, draft_workshop):
     yield wc
 
     db.session.delete(wc)
+
+
+@pytest.yield_fixture
+def accepted_draft_workshop_connection(authorized_user, draft_workshop):
+    """The user is accepted into a workshop that is not ongoing (draft)."""
+    wc = WorkshopConnection(workshop_id=draft_workshop['workshop'].id,
+                            user_id=g.user['id'],
+                            status=WorkshopConnectionStatus.ACCEPTED)
+    db.session.add(wc)
+    db.session.commit()
+
+    yield wc
+
+    db.session.delete(wc)
+    db.session.commit()
 
 
 @pytest.yield_fixture

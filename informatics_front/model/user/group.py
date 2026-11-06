@@ -13,7 +13,8 @@ class Group(db.Model):
     owner_id = db.Column(db.Integer)
     visible = db.Column(db.Integer)
 
-    users = db.relationship('User', secondary='moodle.mdl_ejudge_group_users')
+    users = db.relationship('User', secondary='moodle.mdl_ejudge_group_users',
+                            overlaps='user_groups,user,group')
 
     # owner = db.relationship('SimpleUser', backref=db.backref('groups', lazy='select'), lazy='joined')
 

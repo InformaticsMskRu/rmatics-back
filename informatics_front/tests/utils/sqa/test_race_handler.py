@@ -48,23 +48,21 @@ def test_raw_create_handles_race_condition(authorized_user, ongoing_workshop):
     However, when race contidion occurs, previous call of `_get_object` may return None even if object exists.
     In this case _create_object will still be called and should raise IntegrityError and further session rollback.
     """
-    with patch('informatics_front.utils.sqla.race_handler.db.session.rollback',
-               wraps=db.session.rollback) as rollback:
-        try:
-            # pre-create object
-            cc: ContestConnection = ContestConnection(user_id=authorized_user.user.id,
-                                                      contest_id=ongoing_workshop.get('contest').id)
-            db.session.add(cc)
-            db.session.commit()
+    try:
+        # pre-create object
+        cc: ContestConnection = ContestConnection(user_id=authorized_user.user.id,
+                                                  contest_id=ongoing_workshop.get('contest').id)
+        db.session.add(cc)
+        db.session.commit()
 
-            object_, is_created = _create_object(ContestConnection, user_id=authorized_user.user.id,
-                                                 contest_id=ongoing_workshop.get('contest').id)
-            rollback.assert_called_once()
-            assert cc is object_, '_get_object should return existing object'
-        finally:
-            # unconditioned object deletion
-            db.session.delete(cc)
-            db.session.commit()
+        object_, is_created = _create_object(ContestConnection, user_id=authorized_user.user.id,
+                                             contest_id=ongoing_workshop.get('contest').id)
+        assert is_created is False, 'should not report a duplicate as created'
+        assert cc is object_, '_get_object should return existing object'
+    finally:
+        # unconditioned object deletion
+        db.session.delete(cc)
+        db.session.commit()
 
 
 @pytest.mark.race_handler

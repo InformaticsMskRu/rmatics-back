@@ -22,7 +22,7 @@ def authenticate():
 
     secret_key = current_app.config.get('SECRET_KEY')
     try:
-        user = jwt.decode(auth_token, secret_key, options={'require_exp': True},
+        user = jwt.decode(auth_token, secret_key, options={'require': ['exp']},
                           algorithms=['HS256'])
     except ExpiredSignatureError:
         raise Unauthorized('Token has expired')

@@ -1,6 +1,7 @@
 import datetime
 
 from informatics_front.model.base import db
+from informatics_front.utils.functions import utcnow
 
 
 class Comment(db.Model):
@@ -8,7 +9,7 @@ class Comment(db.Model):
     __table_args__ = {'schema': 'ejudge'}
 
     id = db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    date = db.Column(db.DateTime, default=utcnow)
     contest_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer, nullable=False)
     author_user_id = db.Column(db.Integer, db.ForeignKey('moodle.mdl_user.id'), nullable=False)

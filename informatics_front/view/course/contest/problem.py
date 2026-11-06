@@ -2,7 +2,6 @@ from flask import request
 from flask.views import MethodView
 from marshmallow import fields
 from sqlalchemy.orm import joinedload
-from webargs.flaskparser import parser
 from werkzeug.exceptions import NotFound, BadRequest, Forbidden
 
 from informatics_front.model import db
@@ -11,6 +10,7 @@ from informatics_front.model.problem import EjudgeProblem
 from informatics_front.model.workshop.contest_connection import ContestConnection
 from informatics_front.plugins import internal_rmatics
 from informatics_front.utils.auth.middleware import login_required
+from informatics_front.utils.args import parse_args
 from informatics_front.utils.auth.request_user import current_user
 from informatics_front.utils.response import jsonify
 from informatics_front.view.course.contest.serializers.problem import ProblemSchema
@@ -81,7 +81,7 @@ class ProblemApi(MethodView):
 
         response = problem_serializer.dump(problem)
 
-        return jsonify(response.data)
+        return jsonify(response)
 
 
 class ProblemSubmissionApi(MethodView):
@@ -90,8 +90,8 @@ class ProblemSubmissionApi(MethodView):
         'lang_id': fields.Integer(),
         'status_id': fields.Integer(),
         'statement_id': fields.Integer(),
-        'count': fields.Integer(default=10, missing=10),
-        'page': fields.Integer(default=1, missing=1),
+        'count': fields.Integer(load_default=10),
+        'page': fields.Integer(load_default=1),
         'from_timestamp': fields.Integer(),
         'to_timestamp': fields.Integer(),
     }
@@ -104,7 +104,7 @@ class ProblemSubmissionApi(MethodView):
     def post(self, contest_id, problem_id):
         cc = check_contest_availability(contest_id, NotFound(f'Задача с id #{problem_id} не найдена '
                                                              'или у вас недостаточно прав для ее просмотра'))
-        args = parser.parse(self.post_args, request)
+        args = parse_args(self.post_args)
         check_contest_languages(cc.contest, args.get('lang_id'), Forbidden('На выбранном языке нельзя решать '
                                                                            'задачи из этого контеста. Пожалуйста, '
                                                                            'используйте другой язык'))
@@ -125,7 +125,7 @@ class ProblemSubmissionApi(MethodView):
                                    NotFound(f'Задача с id #{problem_id} не найдена '
                                             'или у вас недостаточно прав для ее просмотра'))
 
-        args = parser.parse(self.get_args, request, error_status_code=400)
+        args = parse_args(self.get_args, error_status_code=400)
 
         # set current authorized user to args
         args['user_id'] = current_user.id

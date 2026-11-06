@@ -2,6 +2,7 @@ import datetime
 from typing import Iterable, List
 
 from informatics_front.model.base import db
+from informatics_front.utils.functions import utcnow
 
 
 MAX_KEY_LEN = 4096
@@ -20,7 +21,7 @@ class CacheMeta(db.Model):
     problem_id = db.Column(db.Integer, nullable=False)
     invalidate_args = db.Column(db.String(MAX_KEY_LEN))
 
-    created = db.Column(db.DateTime(), default=datetime.datetime.utcnow)
+    created = db.Column(db.DateTime(), default=utcnow)
     when_expire = db.Column(db.DateTime(), nullable=False)
 
     @classmethod

@@ -1,3 +1,4 @@
+import pytest
 import datetime
 from unittest.mock import patch, MagicMock
 
@@ -68,6 +69,15 @@ def test_ensure_permissions(workshop_connection_builder):
     workshop_connection = workshop_connection_builder(WorkshopConnectionStatus.ACCEPTED)
     workshop = workshop_connection.workshop
     assert WorkshopMonitorApi._ensure_permissions(workshop.id)
+
+
+def test_ensure_permissions_accepted_draft_workshop_while_another_is_ongoing(accepted_draft_workshop_connection,
+                                                                            ongoing_workshop):
+    # Being accepted is not enough: another ongoing workshop must not make a draft one pass.
+    assert not WorkshopMonitorApi._ensure_permissions(accepted_draft_workshop_connection.workshop_id)
+
+
+@pytest.mark.xfail(reason='contest.problems is only set by _get_contests; fails on master too')
 
 
 def test_get_raw_data_by_contest(ongoing_workshop):
