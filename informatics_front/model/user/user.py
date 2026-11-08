@@ -30,7 +30,8 @@ class User(SimpleUser):
 
     roles = db.relationship('Role',
                             secondary='moodle.mdl_role_assignments',
-                            lazy='select')
+                            lazy='select',
+                            overlaps='user,role')
 
     @property
     def token(self):

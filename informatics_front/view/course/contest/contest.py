@@ -20,11 +20,11 @@ from informatics_front.view.course.contest.serializers.contest import ContestCon
 class ContestApi(MethodView):
     @login_required
     def get(self, contest_id):
-        contest: Contest = db.session.query(Contest) \
-            .options(joinedload(Contest.languages)) \
-            .options(joinedload(Contest.statement)) \
-            .options(joinedload(Contest.workshop)) \
-            .get(contest_id)
+        contest: Contest = db.session.get(Contest, contest_id, options=[
+            joinedload(Contest.languages),
+            joinedload(Contest.statement),
+            joinedload(Contest.workshop),
+        ])
 
         if contest is None:
             raise NotFound(f'Не удалость найти модуль контеста с ID #{contest_id}')
@@ -54,7 +54,7 @@ class ContestApi(MethodView):
             
             db.session.commit()
 
-        return jsonify(response.data)
+        return jsonify(response)
 
     @staticmethod
     def _load_problems(statement_id) -> List[Problem]:
@@ -63,8 +63,8 @@ class ContestApi(MethodView):
             .join(StatementProblem, StatementProblem.problem_id == Problem.id) \
             .filter(StatementProblem.statement_id == statement_id) \
             .filter(StatementProblem.hidden == 0) \
-            .options(Load(Problem).load_only('id', 'name')) \
-            .options(Load(StatementProblem).load_only('rank'))
+            .options(Load(Problem).load_only(Problem.id, Problem.name)) \
+            .options(Load(StatementProblem).load_only(StatementProblem.rank))
 
         problems = []
         # Yes it is ugly but I think its better than rewrite query

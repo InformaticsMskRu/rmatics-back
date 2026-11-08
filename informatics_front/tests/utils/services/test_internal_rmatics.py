@@ -92,8 +92,8 @@ def test_get_monitor(client):
     client.client.get_data.assert_called_with(
         f'{client.service_url}/monitor/problem_monitor',
         params={
-            'user_id': users,
-            'problem_id': problems,
+            'uid': users,
+            'pid': problems,
 
             'context_id': contest_id,
             'context_source': InternalRmatics.default_context_source,
@@ -114,8 +114,8 @@ def test_get_monitor_with_time_before(client):
     client.client.get_data.assert_called_with(
         f'{client.service_url}/monitor/problem_monitor',
         params={
-            'user_id': users,
-            'problem_id': problems,
+            'uid': users,
+            'pid': problems,
             'time_before': time_before,
 
             'context_id': contest_id,

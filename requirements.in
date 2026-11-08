@@ -1,0 +1,15 @@
+# Direct dependencies. Resolved pins live in requirements.txt.
+Flask
+Flask-SQLAlchemy
+SQLAlchemy
+Flask-Migrate
+alembic
+PyMySQL
+cryptography
+marshmallow
+webargs
+PyJWT
+requests
+python-dateutil
+jsonschema
+gunicorn

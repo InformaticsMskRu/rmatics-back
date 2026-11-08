@@ -30,8 +30,10 @@ FLASK_APP=informatics_front.app_factory:create_app('informatics_front.config.Dev
 
 * `ejudge`;
 * `moodle`;
-* `pynformatics` — primary;
-* `informatics`.
+* `pynformatics` — primary.
+
+The test configuration also connects to an `informatics` database, but production has no such schema:
+every model names its schema explicitly.
 
 ### Database migration
 
@@ -86,14 +88,42 @@ flask db upgrade
     ```
     or similar. FKey types should be the same type as PKeys e.g. (`bigint(10) unsigned`);
  
+## Stack
+
+Python 3.13, Flask 3.1, SQLAlchemy 2.1 with Flask-SQLAlchemy 3.1, marshmallow 4, webargs 8, PyJWT 2, PyMySQL.
+Dependencies are in `requirements.in` (direct) and `requirements.txt` (pinned, generated); dev ones in `requirements-dev.*`.
+
+The service does not use MongoDB or Redis. Its database is the production MariaDB 10.3 (schemas `moodle`,
+`ejudge`, `pynformatics`); connect with `?charset=utf8` as before.
+
+Run it with gunicorn (see `Dockerfile`):
+
+```
+gunicorn --bind 0.0.0.0:12347 --workers 4 informatics_front.wsgi:application
+```
+
 ## Running tests
 
-### Docker
+### Docker (MariaDB 10.3, like production)
 
 Build and run tests container with provided docker-compose file:
 
-```jk
-docker-compose --file docker/docker-compose.yml up --force-recreate --abort-on-container-exit --build
+```
+docker compose --file docker/docker-compose.yml up --build --abort-on-container-exit --exit-code-from tests
 ```
 
-If all tests are passed, the Docker process will exit with code 0.jkkkk
+If all tests are passed, the Docker process will exit with code 0.
+
+### Quick local run on SQLite
+
+For a fast check without a database server, with the dev requirements installed:
+
+```
+SQLALCHEMY_DATABASE_URI=sqlite:// FLASK_ENV=testing JWT_TOKEN_EXP=900 JWT_REFRESH_TOKEN_EXP=14400 \
+SERVER_NAME=app.test pytest informatics_front/tests
+```
+
+`informatics_front/tests/conftests/sqlite_schemas.py` attaches the three schemas as separate SQLite files.
+It is a shortcut, not a substitute for the MariaDB run: foreign keys and `ON DELETE CASCADE` are not enforced.
+
+Tests marked `xfail` fail on `master` as well (stale expectations); each carries its reason.

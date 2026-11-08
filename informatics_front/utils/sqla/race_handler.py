@@ -49,14 +49,14 @@ def _create_object(model_class: db.Model, **kwargs) -> Tuple[db.Model, bool]:
     is_created = False
     object_ = model_class(**kwargs)
 
-    db.session.begin_nested()
+    # SAVEPOINT only: SQLAlchemy 2.0's Session.commit() would end the outer transaction
+    # too, while a duplicate insert must roll back nothing but this object.
     try:
-        db.session.add(object_)
-        db.session.commit()
+        with db.session.begin_nested():
+            db.session.add(object_)
         db.session.refresh(object_)
         is_created = True
     except IntegrityError:
-        db.session.rollback()
         object_ = _get_object(model_class, **kwargs)
 
     return object_, is_created

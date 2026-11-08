@@ -3,11 +3,9 @@ from collections import namedtuple, defaultdict
 from typing import List, Type, Callable, Optional, Iterable
 
 from dateutil.tz import UTC
-from flask import request
 from flask.views import MethodView
 from marshmallow import fields
 from sqlalchemy.orm import joinedload, load_only, Load
-from webargs.flaskparser import parser
 from werkzeug.exceptions import NotFound
 
 from informatics_front.model import db, User, Group, UserGroup, StatementProblem, Problem
@@ -17,6 +15,7 @@ from informatics_front.model.workshop.contest_connection import ContestConnectio
 from informatics_front.model.workshop.workshop import WorkShop, WorkshopStatus
 from informatics_front.model.workshop.workshop_connection import WorkshopConnection, WorkshopConnectionStatus
 from informatics_front.plugins import internal_rmatics
+from informatics_front.utils.args import parse_args
 from informatics_front.utils.auth.middleware import login_required
 from informatics_front.utils.auth.request_user import current_user
 from informatics_front.utils.enums import WorkshopMonitorType
@@ -30,12 +29,12 @@ ContestProblemData = namedtuple('ContestProblemData', 'id name rank')
 
 class WorkshopMonitorApi(MethodView):
     get_args = {
-        'group_id': fields.Integer(missing=None)
+        'group_id': fields.Integer(load_default=None)
     }
 
     @login_required
     def get(self, workshop_id):
-        args = parser.parse(self.get_args, request, error_status_code=400)
+        args = parse_args(self.get_args, error_status_code=400)
 
         if not self._ensure_permissions(workshop_id):
             raise NotFound(f'Результаты сбора #{workshop_id} не найдены или у пользователя нет приглашения на него')
@@ -65,7 +64,7 @@ class WorkshopMonitorApi(MethodView):
 
         data = monitor_schema.dump(monitor_data)
 
-        return jsonify(data.data)
+        return jsonify(data)
 
     @classmethod
     def _find_users_on_workshop(cls, workshop_id: int, load_fields: Iterable[str]) -> List[User]:
@@ -73,7 +72,7 @@ class WorkshopMonitorApi(MethodView):
         users = db.session.query(User) \
             .join(WorkshopConnection) \
             .filter(WorkshopConnection.workshop_id == workshop_id) \
-            .options(load_only(*load_fields)) \
+            .options(load_only(*(getattr(User, f) for f in load_fields))) \
             .all()
 
         return users
@@ -81,7 +80,7 @@ class WorkshopMonitorApi(MethodView):
     @classmethod
     def _find_users_by_group(cls, group_id: int, load_fields: Iterable[str]) -> List[User]:
         users = db.session.query(User).join(UserGroup).join(Group).filter(Group.id == group_id) \
-            .options(load_only(*load_fields)) \
+            .options(load_only(*(getattr(User, f) for f in load_fields))) \
             .all()
         return users
 
@@ -89,7 +88,7 @@ class WorkshopMonitorApi(MethodView):
     def _get_users(cls, monitor, group_id: Optional[int]) -> List[User]:
         load_only_fields = ('firstname', 'lastname', 'city', 'school',)
         if not current_user.is_teacher and monitor.is_for_user_only():
-            users = [db.session.query(User).get(current_user.id)]
+            users = [db.session.get(User, current_user.id)]
         elif group_id is not None:
             users = cls._find_users_by_group(group_id, load_only_fields)
         else:
@@ -119,9 +118,8 @@ class WorkshopMonitorApi(MethodView):
         statement_problems: List[StatementProblem] = db.session.query(StatementProblem) \
             .filter(StatementProblem.statement_id.in_(statement_ids)) \
             .filter(StatementProblem.problem_id.isnot(None)) \
-            .options(joinedload(StatementProblem.problem).load_only('id', 'name')) \
-            .options(Load(StatementProblem).load_only('statement_id', 'rank')) \
-            .options(Load(Problem).load_only('id', 'name'))
+            .options(joinedload(StatementProblem.problem).load_only(Problem.id, Problem.name)) \
+            .options(Load(StatementProblem).load_only(StatementProblem.statement_id, StatementProblem.rank))
 
         # Filter statement problems with removed problems
         statement_problems = [sp
@@ -167,6 +165,7 @@ class WorkshopMonitorApi(MethodView):
     @classmethod
     def _ensure_permissions(cls, workshop_id) -> bool:
         return db.session.query(WorkshopConnection) \
+            .join(WorkshopConnection.workshop) \
             .filter(WorkshopConnection.workshop_id == workshop_id,
                     WorkshopConnection.user_id == current_user.id,
                     WorkshopConnection.status.in_((WorkshopConnectionStatus.ACCEPTED,
@@ -208,7 +207,7 @@ class WorkshopMonitorApi(MethodView):
             user_id_time[user_id] = created_time
 
         def time_by_cc(user_id: int):
-            time = user_id_time.get(user_id) or datetime.datetime.utcfromtimestamp(0)
+            time = user_id_time.get(user_id) or datetime.datetime(1970, 1, 1)
             return time.replace(tzinfo=UTC)
 
         return time_by_cc

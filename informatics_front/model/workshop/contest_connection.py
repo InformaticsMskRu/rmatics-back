@@ -1,6 +1,7 @@
 import datetime
 
 from informatics_front.model.base import db
+from informatics_front.utils.functions import utcnow
 
 
 class ContestConnection(db.Model):
@@ -17,7 +18,7 @@ class ContestConnection(db.Model):
         db.ForeignKey('pynformatics.contest.id', ondelete='CASCADE'),
     )
 
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     contest = db.relationship(
         'Contest',

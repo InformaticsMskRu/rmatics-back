@@ -5,6 +5,7 @@ from informatics_front.model.base import db
 from informatics_front.model.workshop.contest_connection import ContestConnection
 from informatics_front.utils.enums import ContestProtocolVisibility
 from informatics_front.utils.sqla.types import IntEnum
+from informatics_front.utils.functions import utcnow
 
 
 class Contest(db.Model):
@@ -27,7 +28,7 @@ class Contest(db.Model):
     time_stop = db.Column(db.DateTime)
     virtual_duration = db.Column(db.Interval, default=datetime.timedelta(seconds=0))
 
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow)
 
     statement = db.relationship('Statement')
     workshop = db.relationship('WorkShop', back_populates='contests')
@@ -35,7 +36,7 @@ class Contest(db.Model):
 
     def _is_available_by_duration(self) -> bool:
         """ Checks date time restrictions """
-        current_time = datetime.datetime.utcnow()
+        current_time = utcnow()
         if self.time_start is not None and self.time_start > current_time:
             return False
         if self.time_stop is not None and self.time_stop < current_time:
@@ -47,7 +48,7 @@ class Contest(db.Model):
         if not self.is_virtual:
             return True
 
-        current_time = datetime.datetime.utcnow()
+        current_time = utcnow()
         if cc.created_at + self.virtual_duration < current_time:
             return False
 
@@ -58,7 +59,7 @@ class Contest(db.Model):
                self._is_available_for_connection(cc)
 
     def is_started(self, cc: Optional[ContestConnection]) -> bool:
-        current_time = datetime.datetime.utcnow()
+        current_time = utcnow()
 
         if not self.is_virtual:
             return current_time > self.time_start

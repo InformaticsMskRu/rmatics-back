@@ -1,5 +1,11 @@
+import datetime
 import hashlib
 import random
+
+
+def utcnow() -> datetime.datetime:
+    """Naive UTC now: the columns and JWT claims here are naive UTC."""
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
 
 
 def attrs_to_dict(obj, *attrs):

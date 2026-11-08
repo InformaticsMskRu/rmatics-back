@@ -1,7 +1,9 @@
-from marshmallow_enum import EnumField
+from marshmallow import fields
 
 
-class ValueEnum(EnumField):
-    def __init__(self, enum, *args, **kwargs):
-        super().__init__(enum, *args, **kwargs)
-        self.by_value = True
+class ValueEnum(fields.Enum):
+    """Serializes an Enum member by its *name*.
+
+    The previous marshmallow_enum based version tried to switch to by-value after
+    __init__, which had no effect, so the API has always returned names (e.g. 'APPLIED').
+    """
